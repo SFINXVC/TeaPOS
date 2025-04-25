@@ -2,19 +2,13 @@
 
 A modern, blazingly fast Point-of-Sale system for restaurants
 
----
-
 ## 🚧 Project Status
 This project is under active development and is not yet feature complete. Contributions and feedback are welcome!
-
----
 
 ## 🛠️ Tech Stack
 - **Backend:** Rust (with ntex.rs for HTTP Server and diesel for ORM)
 - **Database:** PostgreSQL
 - **Frontend:** Vite + React + TypeScript + TailwindCSS v4
-
----
 
 ## 📦 Setup & Installation
 
@@ -62,8 +56,6 @@ cargo run
 pnpm run dev
 ```
 
----
-
 ## ✨ Features (Planned & Current)
 - [ ] User authentication & authorization
 - [ ] Menu, product, and inventory management
@@ -72,8 +64,6 @@ pnpm run dev
 - [ ] Web API endpoints
 - [ ] Frontend interface
 
----
-
 ## 🗺️ Roadmap
 - [ ] Complete core backend APIs
 - [ ] Implement authentication
@@ -81,12 +71,8 @@ pnpm run dev
 - [ ] Build a modern frontend UI
 - [ ] Write tests and documentation
 
----
-
 ## 🤝 Contributing
 Pull requests and issues are welcome! Please open an issue to discuss any major changes.
-
----
 
 ## 📄 License
 This project is licensed under the MIT License.
