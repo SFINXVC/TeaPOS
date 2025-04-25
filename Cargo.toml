@@ -1,0 +1,23 @@
+[package]
+name = "teapos"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "teapos"
+path = "backend/main.rs"
+
+[lib]
+name = "teapos"
+path = "backend/lib.rs"
+
+[dependencies]
+chrono = { version = "0.4.40", features = ["serde"] }
+diesel = { version = "2.2.10", features = ["chrono"] }
+diesel-async = { version = "0.5.2", features = ["deadpool", "postgres"] }
+dotenv = "0.15.0"
+envy = "0.4.2"
+ntex = { version = "2.12.4", features = ["tokio"] }
+serde = { version = "1.0.219", features = ["derive"] }
+thiserror = "2.0.12"
+tokio = { version = "1.44.2", features = ["full"] }
