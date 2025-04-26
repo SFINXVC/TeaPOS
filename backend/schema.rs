@@ -15,6 +15,8 @@ diesel::table! {
         #[max_length = 255]
         username -> Varchar,
         #[max_length = 255]
+        fullname -> Varchar,
+        #[max_length = 255]
         password -> Varchar,
         #[max_length = 15]
         whatsapp -> Varchar,

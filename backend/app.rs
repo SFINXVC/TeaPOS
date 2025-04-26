@@ -1,42 +1,49 @@
-use thiserror::Error;
+use std::sync::Arc;
 use ntex::web::{self, HttpServer};
 
-use crate::config::config::Config;
+use crate::{config::config::Config, database::DbPool};
+use crate::errors::{Error, Result, ServerError};
+use crate::api::auth;
 
-#[derive(Error, Debug)]
-pub enum AppError {
-    #[error("Failed to load config: {0}")]
-    ConfigLoadFailed(#[from] envy::Error),
-    #[error("Failed to bind server: {0}")]
-    ServerBindFailed(#[from] std::io::Error),
-    #[error("Database connection failed: {0}")]
-    DatabaseConnectionFailed(#[from] diesel::ConnectionError),
+pub struct AppState {
+    config: Config,
+    pub(crate) db_pool: DbPool // Made pub(crate) so it can be used by other modules in the crate
 }
 
 pub struct App {
-    config: Config,
+    state: Arc<AppState>
 }
 
 impl App {
-    pub fn new() -> Result<Self, AppError> {
+    pub fn new() -> Result<Self> {
         let config = Config::from_env()?;
-
-        Ok(App { config })
+        let db_pool = DbPool::new(&config.database_url, config.database_pool_size)?;
+        
+        let state = Arc::new(AppState { config, db_pool });
+        
+        Ok(App { state })
     }
 
-    pub async fn run(&self) -> Result<(), AppError> {
-        println!("TeaPOS backend is running at http://{}:{}", self.config.server_address, self.config.server_port);
+    pub async fn run(self) -> Result<()> {
+        println!("TeaPOS backend is running at http://{}:{}", 
+                 self.state.config.server_address, 
+                 self.state.config.server_port);
         
-        let result = HttpServer::new(|| {
-            web::App::new().route("/", web::get().to(|| async { web::HttpResponse::Ok().body("Hello, world!") }))
+        let state = self.state.clone();
+        
+        let result = HttpServer::new(move || {
+            let state = state.clone();
+            web::App::new()
+                .state(state.clone())
+                .configure(auth::configure)
         })
-        .bind((self.config.server_address.clone(), self.config.server_port))?
+        .bind((self.state.config.server_address.clone(), self.state.config.server_port))?
         .run()
         .await;
         
         match result {
             Ok(_) => Ok(()),
-            Err(e) => Err(AppError::ServerBindFailed(e))
+            Err(e) => Err(Error::Server(ServerError::Io(e)))
         }
     }
 }

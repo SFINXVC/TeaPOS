@@ -1,3 +1,1 @@
-mod user;
-
-pub use user::{User, NewUser, UserRole};
+pub mod user;
