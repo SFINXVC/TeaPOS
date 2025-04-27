@@ -1,4 +1,5 @@
 use std::sync::Arc;
+
 use ntex::web::{self, HttpServer};
 
 use crate::{config::config::Config, database::DbPool};
@@ -6,8 +7,8 @@ use crate::errors::{Error, Result, ServerError};
 use crate::api::auth;
 
 pub struct AppState {
-    config: Config,
-    pub(crate) db_pool: DbPool // Made pub(crate) so it can be used by other modules in the crate
+    pub config: Config,
+    pub db_pool: DbPool
 }
 
 pub struct App {
@@ -35,6 +36,7 @@ impl App {
             let state = state.clone();
             web::App::new()
                 .state(state.clone())
+                .wrap(crate::middlewares::response_middleware::Response)
                 .configure(auth::configure)
         })
         .bind((self.state.config.server_address.clone(), self.state.config.server_port))?

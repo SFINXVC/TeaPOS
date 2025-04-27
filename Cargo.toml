@@ -19,5 +19,6 @@ dotenv = "0.15.0"
 envy = "0.4.2"
 ntex = { version = "2.12.4", features = ["tokio"] }
 serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.140", features = ["preserve_order"] }
 thiserror = "2.0.12"
 tokio = { version = "1.44.2", features = ["full"] }

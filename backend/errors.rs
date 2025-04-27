@@ -40,8 +40,7 @@ impl web::error::WebResponseError for Error {
             _ => self.to_string(),
         };
         
-        web::HttpResponse::build(status_code)
-            .json(&ErrorResponse::new(message))
+        web::HttpResponse::build(status_code).body(message)
     }
 }
 
@@ -91,36 +90,6 @@ pub enum ServerError {
     
     #[error("Unexpected error: {0}")]
     Unexpected(String),
-}
-
-#[derive(serde::Serialize)]
-pub struct ErrorResponse {
-    pub success: bool,
-    pub message: String,
-}
-
-impl ErrorResponse {
-    pub fn new<T: Into<String>>(message: T) -> Self {
-        Self {
-            success: false,
-            message: message.into(),
-        }
-    }
-}
-
-#[derive(serde::Serialize)]
-pub struct SuccessResponse<T: serde::Serialize> {
-    pub success: bool,
-    pub data: T,
-}
-
-impl<T: serde::Serialize> SuccessResponse<T> {
-    pub fn new(data: T) -> Self {
-        Self {
-            success: true,
-            data,
-        }
-    }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

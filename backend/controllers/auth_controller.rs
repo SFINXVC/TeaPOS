@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use crate::app::AppState;
-use crate::errors::{Result, Error, AuthError, DatabaseError, SuccessResponse};
+use crate::errors::{Result, Error, AuthError, DatabaseError};
 use crate::models::user::NewUser;
 use crate::services::user_service;
 
@@ -46,7 +46,7 @@ pub async fn login(state: State<Arc<AppState>>, req: Json<LoginRequest>) -> Resu
         role: user.role.to_string(),
     };
 
-    Ok(HttpResponse::Ok().json(&SuccessResponse::new(response)))
+    Ok(HttpResponse::Ok().json(&response))
 }
 
 pub async fn register(state: State<Arc<AppState>>, req: Json<RegisterRequest>) -> Result<HttpResponse> {
@@ -74,5 +74,5 @@ pub async fn register(state: State<Arc<AppState>>, req: Json<RegisterRequest>) -
         role: user.role.to_string(),
     };
 
-    Ok(HttpResponse::Created().json(&SuccessResponse::new(response)))
+    Ok(HttpResponse::Ok().json(&response))
 }
