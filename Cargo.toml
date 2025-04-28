@@ -12,13 +12,21 @@ name = "teapos"
 path = "backend/lib.rs"
 
 [dependencies]
+argon2 = { version = "0.5.3", features = ["std", "password-hash"] }
 chrono = { version = "0.4.40", features = ["serde"] }
 diesel = { version = "2.2.10", features = ["chrono"] }
 diesel-async = { version = "0.5.2", features = ["deadpool", "postgres"] }
 dotenv = "0.15.0"
 envy = "0.4.2"
+governor = "0.10.0"
+jsonwebtoken = "9.3.1"
 ntex = { version = "2.12.4", features = ["tokio"] }
+rand = "0.9.1"
+redis = "0.30.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.140", features = ["preserve_order"] }
 thiserror = "2.0.12"
 tokio = { version = "1.44.2", features = ["full"] }
+uuid = { version = "1.16.0", features = ["v4"] }
+validator = { version = "0.20.0", features = ["derive"] }
+validator_derive = "0.20.0"

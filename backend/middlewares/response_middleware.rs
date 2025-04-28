@@ -1,10 +1,11 @@
 use std::future::poll_fn;
+use std::borrow::Cow;
 
 use ntex::http::body::{Body, MessageBody, ResponseBody};
+use ntex::http::header;
 use ntex::service::{Middleware, Service, ServiceCtx};
 use ntex::util::BytesMut;
 use ntex::web;
-use ntex::http::header;
 use serde_json::Value;
 
 #[derive(serde::Serialize)]
@@ -52,9 +53,9 @@ pub struct ResponseMiddleware<S> {
 }
 
 impl<S> ResponseMiddleware<S> {
-    async fn extract_body(&self, res: &mut web::WebResponse) -> String {
+    async fn extract_body(&self, res: &mut web::WebResponse) -> Cow<'static, str> {
         let mut body = res.take_body();
-        let mut buf = BytesMut::new();
+        let mut buf = BytesMut::with_capacity(1024);
 
         while let Some(chunk) = poll_fn(|cx| body.poll_next_chunk(cx)).await { 
             match chunk {
@@ -66,10 +67,13 @@ impl<S> ResponseMiddleware<S> {
             }
         }
 
-        String::from_utf8_lossy(&buf).to_string()
+        match String::from_utf8(buf.freeze().to_vec()) {
+            Ok(s) => Cow::Owned(s),
+            Err(_) => Cow::Borrowed("Invalid UTF-8 content")
+        }
     }
     
-    fn format_response(&self, status: ntex::http::StatusCode, body_str: &str) -> String {
+    fn format_response(&self, status: ntex::http::StatusCode, body_str: &str) -> Cow<'static, str> {
         if !status.is_success() {
             return self.format_error_response(body_str);
         }
@@ -77,25 +81,30 @@ impl<S> ResponseMiddleware<S> {
         self.format_success_response(body_str)
     }
     
-    fn format_error_response(&self, body_str: &str) -> String {
-        let error_response = ErrorResponse::new(body_str.to_string());
+    fn format_error_response(&self, body_str: &str) -> Cow<'static, str> {
+        let error_response = ErrorResponse::new(body_str);
         
-        serde_json::to_string(&error_response)
-            .unwrap_or_else(|_| "{\"success\":false,\"message\":\"Oops, seems like our server had a little bit of hickups, Please try again later\"}".to_string())
+        match serde_json::to_string(&error_response) {
+            Ok(json) => Cow::Owned(json),
+            Err(_) => Cow::Borrowed("{\"success\":false,\"message\":\"Oops, seems like our server had a little bit of hickups, Please try again later\"}")
+        }
     }
     
-    fn format_success_response(&self, body_str: &str) -> String {
-        match serde_json::from_str::<Value>(body_str) {
-            Ok(data) => {
-                // Create a new SuccessResponse to ensure field order
+    fn format_success_response(&self, body_str: &str) -> Cow<'static, str> {
+        let trimmed = body_str.trim();
+        
+        if trimmed.starts_with('{') || trimmed.starts_with('[') {
+            if let Ok(data) = serde_json::from_str::<Value>(body_str) {
                 let success_response = SuccessResponse::new(data);
                 
-                // Use a custom serializer with preserve_order feature
-                serde_json::to_string(&success_response)
-                    .unwrap_or_else(|_| "{\"success\":true,\"data\":{}}".to_string())
-            },
-            Err(_) => body_str.to_string()
+                if let Ok(json) = serde_json::to_string(&success_response) {
+                    return Cow::Owned(json);
+                }
+                return Cow::Borrowed("{\"success\":true,\"data\":{}}");
+            }
         }
+        
+        Cow::Owned(body_str.to_owned())
     }
 }
 
@@ -116,14 +125,15 @@ where
             header::CONTENT_TYPE,
             header::HeaderValue::from_static("application/json; charset=utf-8")
         );
-
+        
         let status = res.status();
         let body_str = self.extract_body(&mut res).await;
+        
         let json_body = self.format_response(status, &body_str);
         
         res = res.map_body(move |head, _| {
             head.headers.insert(header::CONTENT_LENGTH, json_body.len().into());
-            ResponseBody::Body(Body::from(json_body))
+            ResponseBody::Body(Body::from(json_body.into_owned()))
         });
 
         Ok(res)

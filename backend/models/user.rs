@@ -5,16 +5,15 @@ use chrono::NaiveDateTime;
 use serde::{Serialize, Deserialize};
 use std::fmt;
 use std::str::FromStr;
-// Import diesel macros and types
 use diesel::{AsExpression, FromSqlRow};
 use diesel::pg::{Pg, PgValue};
 use diesel::serialize::{self, Output, ToSql};
 use diesel::deserialize::{self, FromSql};
 use diesel::sql_types::Text;
 use diesel::result::Error as DieselError;
+use argon2::{password_hash::{SaltString, rand_core::OsRng}, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 
-// Import our error types
-use crate::errors::{Error, Result, DatabaseError, ValidationError};
+use crate::errors::{Error, Result, DatabaseError, ValidationError, AuthError};
 
 use crate::schema::users;
 use crate::schema::sql_types::UserRole as UserRoleSqlType;
@@ -104,7 +103,23 @@ pub struct NewUser {
 // UserError has been removed in favor of the centralized error system in errors.rs
 
 impl User {
-    pub async fn create(new_user: NewUser, conn: &mut AsyncPgConnection) -> Result<User> {
+    pub fn hash_password(password: &str) -> Result<String> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        
+        argon2.hash_password(password.as_bytes(), &salt)
+            .map(|hash| hash.to_string())
+            .map_err(|_| Error::Auth(AuthError::InvalidCredentials))
+    }
+    
+    pub fn verify_password(hash: &str, password: &str) -> Result<bool> {
+        let parsed_hash = PasswordHash::new(hash)
+            .map_err(|_| Error::Auth(AuthError::InvalidCredentials))?;
+            
+        Ok(Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok())
+    }
+    
+    pub async fn create(mut new_user: NewUser, conn: &mut AsyncPgConnection) -> Result<User> {
         let existing_user = users::table
             .filter(users::username.eq(&new_user.username))
             .first::<User>(conn)
@@ -114,6 +129,11 @@ impl User {
             return Err(Error::Validation(ValidationError::AlreadyExists(format!("Username '{}' already exists", new_user.username))));
         }
         
+        // Hash the password if it's not already hashed
+        if !Self::is_hashed_password(&new_user.password) {
+            new_user.password = Self::hash_password(&new_user.password)?;
+        }
+        
         diesel::insert_into(users::table)
             .values(&new_user)
             .get_result(conn)
@@ -121,7 +141,7 @@ impl User {
             .map_err(|e| Error::Database(DatabaseError::Query(e)))
     }
 
-    pub async fn create_and_return(new_user: NewUser, conn: &mut AsyncPgConnection) -> Result<User> {
+    pub async fn create_and_return(mut new_user: NewUser, conn: &mut AsyncPgConnection) -> Result<User> {
         let existing_user = users::table
             .filter(users::username.eq(&new_user.username))
             .first::<User>(conn)
@@ -129,6 +149,11 @@ impl User {
 
         if let Ok(_) = existing_user {
             return Err(Error::Validation(ValidationError::AlreadyExists(format!("Username '{}' already exists", new_user.username))));
+        }
+        
+        // Hash the password if it's not already hashed
+        if !Self::is_hashed_password(&new_user.password) {
+            new_user.password = Self::hash_password(&new_user.password)?;
         }
 
         let created_user = diesel::insert_into(users::table)
@@ -188,5 +213,10 @@ impl User {
             .load::<User>(conn)
             .await
             .map_err(|e| Error::Database(DatabaseError::Query(e)))
+    }
+    
+    fn is_hashed_password(password: &str) -> bool {
+        // Argon2 hashes start with $argon2 prefix
+        password.starts_with("$argon2")
     }
 }

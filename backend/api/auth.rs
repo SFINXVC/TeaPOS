@@ -6,5 +6,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         web::scope("/auth")
             .route("/login", web::post().to(auth_controller::login))
             .route("/register", web::post().to(auth_controller::register))
+            .route("/refresh", web::post().to(auth_controller::refresh_token))
+            .route("/logout", web::post().to(auth_controller::logout))
     );
 }
