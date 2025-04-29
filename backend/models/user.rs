@@ -13,7 +13,8 @@ use diesel::sql_types::Text;
 use diesel::result::Error as DieselError;
 use argon2::{password_hash::{SaltString, rand_core::OsRng}, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 
-use crate::errors::{Error, Result, DatabaseError, ValidationError, AuthError};
+use crate::error::{Error as AppError, Result};
+use thiserror::Error;
 
 use crate::schema::users;
 use crate::schema::sql_types::UserRole as UserRoleSqlType;
@@ -77,6 +78,12 @@ impl FromSql<UserRoleSqlType, Pg> for UserRole {
     }
 }
 
+impl From<UserError> for AppError {
+    fn from(error: UserError) -> Self {
+        AppError::DatabaseError(error.into())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
 #[diesel(table_name = users)]
 pub struct User {
@@ -100,7 +107,23 @@ pub struct NewUser {
     pub role: UserRole,
 }
 
-// UserError has been removed in favor of the centralized error system in errors.rs
+#[derive(Debug, Error)]
+pub enum UserError {
+    #[error("Invalid credentials")]
+    InvalidCredentials,
+
+    #[error("User with username '{0}' already exists")]
+    UserAlreadyExists(String),
+
+    #[error("User with ID '{0}' not found")]
+    UserIDNotFound(i32),
+
+    #[error("User with username '{0}' not found")]
+    UsernameNotFound(String),
+
+    #[error("Unexpected database error: {0}")]
+    DatabaseError(#[from] DieselError),
+}
 
 impl User {
     pub fn hash_password(password: &str) -> Result<String> {
@@ -109,12 +132,12 @@ impl User {
         
         argon2.hash_password(password.as_bytes(), &salt)
             .map(|hash| hash.to_string())
-            .map_err(|_| Error::Auth(AuthError::InvalidCredentials))
+            .map_err(|_| UserError::InvalidCredentials.into())
     }
     
     pub fn verify_password(hash: &str, password: &str) -> Result<bool> {
         let parsed_hash = PasswordHash::new(hash)
-            .map_err(|_| Error::Auth(AuthError::InvalidCredentials))?;
+            .map_err(|_| UserError::InvalidCredentials)?;
             
         Ok(Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok())
     }
@@ -126,10 +149,9 @@ impl User {
             .await;
             
         if let Ok(_) = existing_user {
-            return Err(Error::Validation(ValidationError::AlreadyExists(format!("Username '{}' already exists", new_user.username))));
+            return Err(UserError::UserAlreadyExists(new_user.username).into());
         }
         
-        // Hash the password if it's not already hashed
         if !Self::is_hashed_password(&new_user.password) {
             new_user.password = Self::hash_password(&new_user.password)?;
         }
@@ -138,7 +160,7 @@ impl User {
             .values(&new_user)
             .get_result(conn)
             .await
-            .map_err(|e| Error::Database(DatabaseError::Query(e)))
+            .map_err(|e| UserError::DatabaseError(e).into())
     }
 
     pub async fn create_and_return(mut new_user: NewUser, conn: &mut AsyncPgConnection) -> Result<User> {
@@ -148,10 +170,10 @@ impl User {
             .await;
 
         if let Ok(_) = existing_user {
-            return Err(Error::Validation(ValidationError::AlreadyExists(format!("Username '{}' already exists", new_user.username))));
+            return Err(UserError::UserAlreadyExists(new_user.username).into());
         }
         
-        // Hash the password if it's not already hashed
+        // hash the password if it hasn't been hashed yet.
         if !Self::is_hashed_password(&new_user.password) {
             new_user.password = Self::hash_password(&new_user.password)?;
         }
@@ -160,7 +182,7 @@ impl User {
             .values(&new_user)
             .get_result(conn)
             .await
-            .map_err(|e| Error::Database(DatabaseError::Query(e)))?;
+            .map_err(|e| UserError::DatabaseError(e))?;
 
         Ok(created_user)
     }
@@ -170,11 +192,11 @@ impl User {
             .find(id)
             .first(conn)
             .await
-            .map_err(|error| {
-                if let DieselError::NotFound = error {
-                    Error::NotFound(format!("User with ID {} not found", id))
+            .map_err(|e| {
+                if let DieselError::NotFound = e {
+                    UserError::UserIDNotFound(id).into()
                 } else {
-                    Error::Database(DatabaseError::Query(error))
+                    UserError::DatabaseError(e).into()
                 }
             })
     }
@@ -184,11 +206,11 @@ impl User {
             .filter(users::username.eq(username))
             .first(conn)
             .await
-            .map_err(|error| {
-                if let DieselError::NotFound = error {
-                    Error::NotFound(format!("User with username '{}' not found", username))
+            .map_err(|e| {
+                if let DieselError::NotFound = e {
+                    UserError::UsernameNotFound(username.to_string()).into()
                 } else {
-                    Error::Database(DatabaseError::Query(error))
+                    UserError::DatabaseError(e).into()
                 }
             })
     }
@@ -198,25 +220,24 @@ impl User {
             .set(self)
             .get_result(conn)
             .await
-            .map_err(|e| Error::Database(DatabaseError::Query(e)))
+            .map_err(|e| UserError::DatabaseError(e).into())
     }
 
     pub async fn delete(&self, conn: &mut AsyncPgConnection) -> Result<usize> {
         diesel::delete(users::table.find(self.id))
             .execute(conn)
             .await
-            .map_err(|e| Error::Database(DatabaseError::Query(e)))
+            .map_err(|e| UserError::DatabaseError(e).into())
     }
 
-    pub async fn all(conn: &mut AsyncPgConnection) -> Result<Vec<User>> {
+    pub async fn get_all(conn: &mut AsyncPgConnection) -> Result<Vec<User>> {
         users::table
             .load::<User>(conn)
             .await
-            .map_err(|e| Error::Database(DatabaseError::Query(e)))
+            .map_err(|e| UserError::DatabaseError(e).into())
     }
     
     fn is_hashed_password(password: &str) -> bool {
-        // Argon2 hashes start with $argon2 prefix
         password.starts_with("$argon2")
     }
 }

@@ -1,5 +1,5 @@
 use diesel_async::AsyncPgConnection;
-use crate::errors::Result;
+use crate::error::Result;
 use crate::models::user::{NewUser, User, UserRole};
 
 pub async fn seed(conn: &mut AsyncPgConnection) -> Result<()> {

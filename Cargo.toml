@@ -12,6 +12,7 @@ name = "teapos"
 path = "backend/lib.rs"
 
 [dependencies]
+anyhow = { version = "1.0.98", features = ["backtrace"] }
 argon2 = { version = "0.5.3", features = ["std", "password-hash"] }
 chrono = { version = "0.4.40", features = ["serde"] }
 diesel = { version = "2.2.10", features = ["chrono"] }

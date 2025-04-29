@@ -5,7 +5,7 @@ use ntex::service::{Service, ServiceCtx};
 use ntex::web;
 
 use crate::app::AppState;
-use crate::errors::{Error as AppError, AuthError};
+use crate::error::Error;
 use crate::services::token_service::TokenClaims;
 
 pub struct Auth;
@@ -41,19 +41,19 @@ where
         let auth_header = req.headers().get(header::AUTHORIZATION);
         
         if auth_header.is_none() {
-            return Err(AppError::Auth(AuthError::Unauthorized).into());
+            return Err(Error::ForbiddenError.into());
         }
         
         let auth_header = auth_header.unwrap().to_str().unwrap_or_default();
         
         if !auth_header.starts_with("Bearer ") {
-            return Err(AppError::Auth(AuthError::Unauthorized).into());
+            return Err(Error::ForbiddenError.into());
         }
         
         let token = auth_header.trim_start_matches("Bearer ").trim();
         
         if token.is_empty() {
-            return Err(AppError::Auth(AuthError::Unauthorized).into());
+            return Err(Error::ForbiddenError.into());
         }
         
         let state = req.app_state::<Arc<AppState>>().unwrap();

@@ -1,17 +1,18 @@
 use std::sync::Arc;
 
+use anyhow::anyhow;
 use ntex::web::{self, HttpServer};
 
 use crate::services::redis_service::RedisService;
 use crate::services::session_service::SessionService;
 use crate::services::token_service::TokenService;
 use crate::{config::config::Config, database::DbPool};
-use crate::errors::{Error, Result, ServerError};
+use crate::error::{Error, Result};
 use crate::api::auth;
 use crate::seeds;
 
 async fn not_found() -> Result<web::HttpResponse> {
-    Err(Error::Server(ServerError::Forbidden))
+    Err(Error::ApiError(anyhow!("However, those stuffs aren't available.")))
 }
 
 pub struct AppState {
@@ -79,13 +80,13 @@ impl App {
                 .configure(auth::configure)
                 .default_service(web::to(not_found))
         })
-        .bind((self.state.config.server_address.clone(), self.state.config.server_port))?
+        .bind((self.state.config.server_address.clone(), self.state.config.server_port)).map_err(|e| Error::IoError(e.into())).unwrap()
         .run()
         .await;
         
         match result {
             Ok(_) => Ok(()),
-            Err(e) => Err(Error::Server(ServerError::Io(e)))
+            Err(e) => Err(Error::IoError(e.into()))
         }
     }
 }

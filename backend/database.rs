@@ -3,7 +3,8 @@ use diesel_async::{pooled_connection::{
     AsyncDieselConnectionManager
 }, AsyncPgConnection};
 
-use crate::errors::{Error, DatabaseError, Result};
+use anyhow::anyhow;
+use crate::error::{Error, Result};
 
 pub struct DbPool {
     pool: Pool<AsyncPgConnection>
@@ -11,13 +12,13 @@ pub struct DbPool {
 
 impl From<BuildError> for Error {
     fn from(e: BuildError) -> Self {
-        Error::Database(DatabaseError::Connection(e.to_string()))
+        Error::DatabaseError(anyhow!("Failed to build database connection pool: {}", e))
     }
 }
 
 impl From<PoolError> for Error {
     fn from(e: PoolError) -> Self {
-        Error::Database(DatabaseError::Pool(e.to_string()))
+        Error::DatabaseError(anyhow!("Failed to get database connection: {}", e))
     }
 }
 
