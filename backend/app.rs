@@ -74,6 +74,7 @@ impl App {
             let state = state.clone();
             web::App::new()
                 .state(state.clone())
+                .wrap(crate::middlewares::auth_middleware::Auth)
                 .wrap(crate::middlewares::response_middleware::Response)
                 .configure(auth::configure)
                 .default_service(web::to(not_found))
