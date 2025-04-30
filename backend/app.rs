@@ -8,7 +8,7 @@ use crate::services::session_service::SessionService;
 use crate::services::token_service::TokenService;
 use crate::{config::config::Config, database::DbPool};
 use crate::error::{Error, Result};
-use crate::api::auth;
+use crate::api::{auth, user};
 use crate::seeds;
 
 async fn not_found() -> Result<web::HttpResponse> {
@@ -78,9 +78,10 @@ impl App {
                 .wrap(crate::middlewares::auth_middleware::Auth)
                 .wrap(crate::middlewares::response_middleware::Response)
                 .configure(auth::configure)
+                .configure(user::configure)
                 .default_service(web::to(not_found))
         })
-        .bind((self.state.config.server_address.clone(), self.state.config.server_port)).map_err(|e| Error::IoError(e.into())).unwrap()
+        .bind((self.state.config.server_address.clone(), self.state.config.server_port)).map_err(|e| Error::IoError(e.into()))?
         .run()
         .await;
         

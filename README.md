@@ -8,7 +8,7 @@ This project is under active development and is not yet feature complete. Contri
 ## 🛠️ Tech Stack
 - **Backend:** Rust (with ntex.rs for HTTP Server and diesel for ORM)
 - **Database:** PostgreSQL
-- **Frontend:** Vite + React + TypeScript + TailwindCSS v4
+- **Frontend:** NextJS
 
 ## 📦 Setup & Installation
 

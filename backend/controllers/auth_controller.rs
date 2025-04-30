@@ -2,6 +2,7 @@ use chrono::Utc;
 use ntex::web::{self, HttpResponse};
 use ntex::web::types::{Json, State};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use uuid::Uuid;
 use std::sync::Arc;
 use anyhow::anyhow;
@@ -42,15 +43,13 @@ pub struct UserResponse {
     pub id: i32,
     pub username: String,
     pub fullname: String,
-    pub whatsapp: String,
     pub role: String,
 }
 
 #[derive(Serialize, Debug)]
 pub struct TokenResponse {
     pub access_token: String,
-    pub refresh_token: String,
-    pub user: UserResponse
+    pub refresh_token: String
 }
 
 #[derive(Serialize, Debug)]
@@ -94,14 +93,8 @@ pub async fn login(state: State<Arc<AppState>>, req: Json<LoginRequest>, http_re
 
     state.session_service.create_session(user.id, device_info, &refresh_claims.jti).await?;
 
-    let response = UserResponse {
-        id: user.id,
-        username: user.username,
-        fullname: user.fullname,
-        whatsapp: user.whatsapp,
-        role: user.role.to_string(),
-    };
-
+    let response = json!({ "message": "Login successful" });
+    
     Ok(HttpResponse::Ok()
         .set_header("X-Access-Token", access_token)
         .set_header("X-Refresh-Token", refresh_token)
@@ -147,16 +140,10 @@ pub async fn refresh_token(state: State<Arc<AppState>>, req: Json<RefreshTokenRe
 
     state.session_service.update_session_activity(&refresh_claims.jti, device_info).await?;
 
-    let response = AccessTokenResponse {
-        user: UserResponse {
-            id: user.id,
-            username: user.username,
-            fullname: user.fullname,
-            whatsapp: user.whatsapp,
-            role: user.role.to_string(),
-        }
-    };
+    let _user_id = user.id;
 
+    let response = json!({ "message": "Token refreshed successfully" });
+    
     Ok(HttpResponse::Ok()
         .set_header("X-Access-Token", access_token)
         .json(&response))
@@ -177,17 +164,11 @@ pub async fn register(state: State<Arc<AppState>>, req: Json<RegisterRequest>) -
         role: UserRole::User
     };
     
-    let user = User::create_and_return(new_user, &mut conn).await?;
+    let _user = User::create_and_return(new_user, &mut conn).await?;
     
-    let response = UserResponse {
-        id: user.id,
-        username: user.username,
-        fullname: user.fullname,
-        whatsapp: user.whatsapp,
-        role: user.role.to_string(),
-    };
-
-    Ok(HttpResponse::Ok().json(&response))
+    let response = json!({ "message": "User registered successfully" });
+    
+    Ok(HttpResponse::Created().json(&response))
 }
 
 pub async fn logout(state: State<Arc<AppState>>, req: Json<LogoutRequest>) -> Result<HttpResponse> {
@@ -195,5 +176,7 @@ pub async fn logout(state: State<Arc<AppState>>, req: Json<LogoutRequest>) -> Re
     
     state.session_service.invalidate_session(&refresh_claims.jti).await?;
     
-    Ok(HttpResponse::Ok().finish())
+    let response = json!({ "message": "Logout successful" });
+    
+    Ok(HttpResponse::Ok().json(&response))
 }

@@ -31,8 +31,6 @@ pub struct SessionService {
     session_expiry: u64, // in sec    
 }
 
-
-
 #[derive(Debug, Error)]
 pub enum SessionError {
     #[error("Invalid session token")]
@@ -86,6 +84,7 @@ impl SessionService {
             .expire(&user_sessions_key, self.session_expiry as i64)
             .query(&mut conn)
             .map_err(|e| AppError::ServiceError(anyhow!("Redis command error: {}", e)))?;
+        
         Ok(())
     }
 
