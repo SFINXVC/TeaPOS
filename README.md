@@ -1,6 +1,6 @@
 # TeaPOS
 
-[![Build](https://github.com/your-username/TeaPOS/actions/workflows/build.yml/badge.svg)](https://github.com/your-username/TeaPOS/actions/workflows/build.yml)
+[![Build](https://github.com/SFINXVC/TeaPOS/actions/workflows/build.yml/badge.svg)](https://github.com/SFINXVC/TeaPOS/actions/workflows/build.yml)
 
 A modern, blazingly fast Point-of-Sale system for restaurants
 
