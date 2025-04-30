@@ -39,22 +39,9 @@ pub struct RegisterRequest {
 }
 
 #[derive(Serialize, Debug)]
-pub struct UserResponse {
-    pub id: i32,
-    pub username: String,
-    pub fullname: String,
-    pub role: String,
-}
-
-#[derive(Serialize, Debug)]
 pub struct TokenResponse {
     pub access_token: String,
     pub refresh_token: String
-}
-
-#[derive(Serialize, Debug)]
-pub struct AccessTokenResponse {
-    pub user: UserResponse
 }
 
 #[derive(Serialize, Debug)]
