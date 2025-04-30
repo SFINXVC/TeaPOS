@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Search, Mic, MapPin, Bell, ChevronDown } from "lucide-react";
+import { Search, Mic, Bell } from "lucide-react";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
