@@ -30,14 +30,12 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         let config = Config::from_env()?;
         let db_pool = DbPool::new(&config.database_url, config.database_pool_size)?;
 
-        let redis_service = Arc::new(RedisService::new(&config)?);
-
+        let redis_service = Arc::new(RedisService::new(&config).await?);
         let token_service = TokenService::new(&config);
-
         let session_service = SessionService::new(redis_service.clone(), &config);
 
         let state = Arc::new(AppState { config, db_pool, token_service, redis_service, session_service });

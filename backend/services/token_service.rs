@@ -11,7 +11,7 @@ use crate::models::user::User;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenClaims {
-    pub sub: i32,
+    pub sub: i64,
     pub role: String,
     pub exp: i64,
     pub iat: i64,

@@ -23,11 +23,8 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
-    "strictNullChecks": true
+      "@/*": ["./frontend/*"]
+    }
   },
   "include": [
     "next-env.d.ts",

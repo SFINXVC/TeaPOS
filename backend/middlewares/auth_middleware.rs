@@ -71,7 +71,7 @@ where
     }
 }
 
-pub fn get_user_id(req: &web::HttpRequest) -> Option<i32> {
+pub fn get_user_id(req: &web::HttpRequest) -> Option<i64> {
     req.extensions().get::<TokenClaims>().map(|claims| claims.sub)
 }
 
@@ -80,12 +80,12 @@ pub fn get_user_role(req: &web::HttpRequest) -> Option<String> {
 }
 
 pub trait UserInfo {
-    fn user_id(&self) -> Option<i32>;
+    fn user_id(&self) -> Option<i64>;
     fn user_role(&self) -> Option<String>;
 }
 
 impl UserInfo for web::HttpRequest {
-    fn user_id(&self) -> Option<i32> {
+    fn user_id(&self) -> Option<i64> {
         get_user_id(self)
     }
     

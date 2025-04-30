@@ -11,7 +11,7 @@ diesel::table! {
     use super::sql_types::UserRole;
 
     users (id) {
-        id -> Int4,
+        id -> BigSerial,
         #[max_length = 255]
         username -> Varchar,
         #[max_length = 255]

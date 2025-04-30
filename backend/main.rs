@@ -5,7 +5,7 @@ use teapos::app::App;
 async fn main() {
     let args: Vec<String> = env::args().collect();
     
-    let app = App::new().unwrap_or_else(|e| {
+    let app = App::new().await.unwrap_or_else(|e| {
         eprintln!("{}", e);
         std::process::exit(-1);
     });

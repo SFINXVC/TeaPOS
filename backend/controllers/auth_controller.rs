@@ -1,7 +1,7 @@
 use chrono::Utc;
 use ntex::web::{self, HttpResponse};
 use ntex::web::types::{Json, State};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
 use std::sync::Arc;
@@ -36,19 +36,6 @@ pub struct RegisterRequest {
     pub password: String,
     pub password_confirm: String,
     pub whatsapp: String
-}
-
-#[derive(Serialize, Debug)]
-pub struct TokenResponse {
-    pub access_token: String,
-    pub refresh_token: String
-}
-
-#[derive(Serialize, Debug)]
-pub struct SessionResponse {
-    pub device_info: DeviceInfo,
-    pub created_at: String,
-    pub last_active: String
 }
 
 pub async fn login(state: State<Arc<AppState>>, req: Json<LoginRequest>, http_req: web::HttpRequest) -> Result<HttpResponse> {

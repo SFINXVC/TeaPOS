@@ -87,7 +87,7 @@ impl From<UserError> for AppError {
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
 #[diesel(table_name = users)]
 pub struct User {
-    pub id: i32,
+    pub id: i64,
     pub username: String,
     pub fullname: String,
     pub password: String,
@@ -116,7 +116,7 @@ pub enum UserError {
     UserAlreadyExists(String),
 
     #[error("User with ID '{0}' not found")]
-    UserIDNotFound(i32),
+    UserIDNotFound(i64),
 
     #[error("User with username '{0}' not found")]
     UsernameNotFound(String),
@@ -187,7 +187,7 @@ impl User {
         Ok(created_user)
     }
 
-    pub async fn find_by_id(id: i32, conn: &mut AsyncPgConnection) -> Result<User> {
+    pub async fn find_by_id(id: i64, conn: &mut AsyncPgConnection) -> Result<User> {
         users::table
             .find(id)
             .first(conn)
