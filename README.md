@@ -52,12 +52,12 @@ diesel migration run
 ```bash
 # run the backend (debug):
 cargo run
-# and then, run the vite development server for the frontend:
+# and then, run the nextjs development server for the frontend:
 pnpm run dev
 ```
 
 ## ✨ Features (Planned & Current)
-- [ ] User authentication & authorization
+- [X] User authentication & authorization
 - [ ] Menu, product, and inventory management
 - [ ] Order and sales tracking
 - [ ] Table and seat management
