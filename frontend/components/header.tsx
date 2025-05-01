@@ -1,5 +1,6 @@
 import { Bell } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import Image from "next/image"
 import { ReactNode } from "react"
 
 interface HeaderProps {
@@ -58,10 +59,10 @@ export function Header({ children }: HeaderProps) {
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-xl md:text-2xl tracking-tight text-primary drop-shadow-sm">TeaPOS</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <ThemeToggle />
-              <button className="inline-flex items-center justify-center rounded-full ml-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-all w-9 h-9">
-                <img src="/profile.jpg" alt="Profile" className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" />
+              <button className="inline-flex items-center justify-center rounded-full ml-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-all w-9 h-9">
+                <Image src="/default_profile.jpg" alt="Profile" width={20} height={20} className="w-6 h-6 rounded-full object-cover border-2 border-white shadow-sm" />
               </button>
             </div>
           </div>

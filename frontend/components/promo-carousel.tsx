@@ -6,6 +6,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import Image from "next/image"
 
 const promos = [
   {
@@ -40,9 +41,11 @@ export function PromoCarousel() {
         {promos.map((promo, idx) => (
           <CarouselItem key={idx}>
             <Card className="mt-4 bg-primary text-primary-foreground overflow-hidden shadow-lg border-none relative h-56 md:h-72 lg:h-96">
-              <img
+              <Image
                 src={promo.img}
                 alt="Promo"
+                width={800}
+                height={384}
                 className="absolute inset-0 w-full h-full object-cover z-0 select-none"
                 draggable="false"
               />

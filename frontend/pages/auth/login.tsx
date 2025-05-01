@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
+import Link from "next/link"
 
 const AuthLogin = () => {
     const [email, setEmail] = useState("")
@@ -49,7 +50,7 @@ const AuthLogin = () => {
                             />
                         </div>
                         <div className="flex items-center justify-between pt-2">
-                            <a href="/auth?type=forgot" className="text-sm text-primary hover:underline">Forgot password?</a>
+                            <Link href="/auth?type=forgot" className="text-sm text-primary hover:underline">Forgot password?</Link>
                         </div>
                         <Button type="submit" className="w-full mt-2" disabled={loading}>
                             {loading ? "Signing in..." : "Sign In"}
@@ -57,7 +58,7 @@ const AuthLogin = () => {
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
-                    <span className="text-sm text-muted-foreground">Don&apos;t have an account? <a href="/auth?type=register" className="text-primary hover:underline">Sign up</a></span>
+                    <span className="text-sm text-muted-foreground">Don&apos;t have an account? <Link href="/auth?type=register" className="text-primary hover:underline">Sign up</Link></span>
                 </CardFooter>
             </Card>
         </div>

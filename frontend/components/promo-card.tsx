@@ -1,11 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 export function PromoCard() {
   const promoImg = "/promo_bg.png" // Place your image in public/promo.jpg or change the path
   return (
     <Card className="mt-4 bg-primary text-primary-foreground overflow-hidden shadow-lg border-none relative h-56 md:h-72 lg:h-96">
-      <img
+      <Image
         src={promoImg}
         alt="Promo"
         className="absolute inset-0 w-full h-full object-cover z-0 select-none"
